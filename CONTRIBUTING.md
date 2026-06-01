@@ -19,6 +19,15 @@
 
 4. Open a pull request against `main` using the PR template.
 
+### Push-after-completion policy
+
+1. Push commits immediately after each logical unit of work is verified (lint + tests pass).
+2. Do not batch multiple unrelated changes into a single push.
+3. Never push secrets, credentials, API keys, or large binary files. Run `git diff --stat` before staging to review what you are pushing.
+4. Work-in-progress that cannot be completed in one session must be pushed to a feature/fix branch (not `main`) with a clear commit message describing what remains.
+5. Release commits on `main` must be tagged (`vMAJOR.MINOR.PATCH`) immediately after push.
+6. If a push fails (rejected by remote), rebase on latest `origin/main` and retry — never force-push to shared branches without CTO approval.
+
 ## Code conventions
 
 - **C++**: C++20, Google style with 4-space indent (see `.clang-format`)
