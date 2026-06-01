@@ -32,8 +32,6 @@ else()
     set(METRO_BUNDLE_PLATFORM_DIR "Linux-x86-64")
 endif()
 
-set(METRO_BUNDLE_BASE "MetroEffects.bundle/Contents/${METRO_BUNDLE_PLATFORM_DIR}")
-
 function(metro_add_plugin target)
     set(options)
     set(oneValueArgs)
@@ -56,12 +54,15 @@ function(metro_add_plugin target)
             BUNDLE ON
             MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/cmake/PluginInfo.plist.in"
         )
+        install(TARGETS ${target}
+            LIBRARY DESTINATION "MetroEffects.bundle/Contents/${METRO_BUNDLE_PLATFORM_DIR}"
+        )
+    else()
+        install(TARGETS ${target}
+            LIBRARY DESTINATION "."
+            RUNTIME DESTINATION "."
+        )
     endif()
-
-    install(TARGETS ${target}
-        LIBRARY DESTINATION "${METRO_BUNDLE_BASE}"
-        RUNTIME DESTINATION "${METRO_BUNDLE_BASE}"
-    )
 endfunction()
 
 function(metro_add_test target)
