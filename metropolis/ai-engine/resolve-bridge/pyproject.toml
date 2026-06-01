@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "metropolis-ai-bridge"
+version = "0.1.0"
+description = "Python bridge between DaVinci Resolve scripting API and Metro AI inference engine"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.24",
+    "onnxruntime>=1.15",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=24.0",
+    "ruff>=0.1.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["resolve_bridge*"]

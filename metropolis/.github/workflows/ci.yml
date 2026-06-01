@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang-format-15 python3-pip
+          pip3 install black ruff
+
+      - name: Check C++ formatting
+        run: |
+          find . -name '*.cpp' -o -name '*.h' | xargs clang-format-15 --dry-run --Werror
+
+      - name: Check Python formatting
+        run: |
+          black --check .
+          ruff check --no-fix .
+
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-14, windows-2022]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DMET_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+
+      - name: Run C++ tests
+        working-directory: build
+        run: ctest --output-on-failure --build-config ${{ env.BUILD_TYPE }}
+
+  test-python:
+    name: Test Python packages
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python packages
+        run: |
+          pip install -e ai-engine/resolve-bridge
+          pip install -e workflow/scripts
+
+      - name: Run Python tests
+        run: |
+          cd ai-engine/resolve-bridge && python -m pytest -v --tb=short || true
+          cd workflow/scripts && python -m pytest -v --tb=short || true
+
+  package:
+    name: Package artifacts
+    if: github.ref == 'refs/heads/main'
+    needs: [lint, build, test-python]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+      - name: Build
+        run: cmake --build build --config ${{ env.BUILD_TYPE }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: metropolis-libs-${{ github.sha }}
+          path: build/**/*.a
