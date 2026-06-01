@@ -33,6 +33,12 @@ if(METRO_BUILD_TESTS)
     add_subdirectory(tests/metro-blobtrack-test)
     add_subdirectory(tests/chromab-test)
     add_subdirectory(tests/glow-test)
+    add_subdirectory(tests/lensflare-test)
+    add_subdirectory(tests/metro-splittone-test)
+    add_subdirectory(tests/filmgrain-test)
+    add_subdirectory(tests/colorspace-test)
+    add_subdirectory(tests/transitions-test)
+    add_subdirectory(tests/vrteams-test)
 endif()
 
 # --- Packaging ---
