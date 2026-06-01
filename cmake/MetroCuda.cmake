@@ -28,7 +28,7 @@ else()
     set(METRO_CUDA_LIBRARIES "")
 endif()
 
-# Function for targets that need CUDA dependency headers
+# Function for targets that need CUDA dependency headers (libs, engines)
 function(metro_target_cuda target)
     if(METRO_USE_CUDA AND CUDAToolkit_FOUND)
         target_compile_definitions(${target} PUBLIC ${METRO_CUDA_DEFINITIONS})
@@ -36,5 +36,30 @@ function(metro_target_cuda target)
         target_link_libraries(${target} PUBLIC ${METRO_CUDA_LIBRARIES})
     else()
         target_compile_definitions(${target} PUBLIC METRO_HAVE_CUDA=0)
+    endif()
+endfunction()
+
+# Function for plugin targets that need CUDA support.
+# Wraps metro_add_plugin() with GPU pipeline linkage and optional .cu compilation.
+function(metro_add_gpu_plugin target)
+    set(options)
+    set(oneValueArgs)
+    set(multiValueArgs SOURCES LINK_LIBS CUDA_SOURCES)
+    cmake_parse_arguments(METRO_GPU "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(METRO_USE_CUDA AND CUDAToolkit_FOUND AND METRO_GPU_CUDA_SOURCES)
+        enable_language(CUDA)
+        list(APPEND METRO_GPU_SOURCES ${METRO_GPU_CUDA_SOURCES})
+    endif()
+
+    metro_add_plugin(${target}
+        SOURCES ${METRO_GPU_SOURCES}
+        LINK_LIBS ${METRO_GPU_LINK_LIBS}
+    )
+
+    metro_target_cuda(${target})
+
+    if(METRO_USE_CUDA AND CUDAToolkit_FOUND)
+        target_link_libraries(${target} PRIVATE ofx-gpu)
     endif()
 endfunction()
