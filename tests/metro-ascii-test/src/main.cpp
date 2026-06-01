@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Metro Design. All rights reserved.
 #include <cstdio>
 #include <cassert>
 #include <cmath>

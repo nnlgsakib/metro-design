@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Metro Design. All rights reserved.
 #ifndef METRO_OFX_HOST_HPP
 #define METRO_OFX_HOST_HPP
 

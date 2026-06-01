@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Metro Design. All rights reserved.
 #include "metro/blobtrack/BlobDetector.hpp"
 
 #include <vector>

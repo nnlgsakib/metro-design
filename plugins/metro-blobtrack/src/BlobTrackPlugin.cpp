@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Metro Design. All rights reserved.
 #include "metro/ofx/Plugin.hpp"
 #include "metro/ofx/param/ParamManager.hpp"
 #include "metro/blobtrack/BlobDetector.hpp"

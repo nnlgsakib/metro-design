@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Metro Design. All rights reserved.
 #ifndef METRO_BLOBTRACK_BLOBDETECTOR_HPP
 #define METRO_BLOBTRACK_BLOBDETECTOR_HPP
 
