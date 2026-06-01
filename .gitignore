@@ -21,3 +21,11 @@ __pycache__/
 dist/
 *.bundle
 metropolis/Testing/
+Testing/
+*.log
+compile_commands.json
+.cache/
+node_modules/
+.next/
+metropolis/frontend/.next/
+metropolis/frontend/out/
