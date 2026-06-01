@@ -1,11 +1,13 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.18)
 project(metrovfx VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 include(MetroCompileSettings)
+include(MetroCuda)
 
 add_subdirectory(libs/ofx-core)
+add_subdirectory(libs/ofx-gpu)
 
 option(METRO_BUILD_PLUGINS "Build plugin targets" ON)
 option(METRO_BUILD_TESTS "Build test targets" ON)
@@ -16,6 +18,12 @@ if(METRO_BUILD_PLUGINS)
     add_subdirectory(plugins/metro-blobtrack)
     add_subdirectory(plugins/metro-chromab)
     add_subdirectory(plugins/metro-vrteams)
+    add_subdirectory(plugins/metro-glow)
+    add_subdirectory(plugins/metro-filmgrain)
+    add_subdirectory(plugins/metro-lensflare)
+    add_subdirectory(plugins/metro-splittone)
+    add_subdirectory(plugins/metro-colorspace)
+    add_subdirectory(plugins/metro-transitions)
 endif()
 
 if(METRO_BUILD_TESTS)
@@ -24,6 +32,7 @@ if(METRO_BUILD_TESTS)
     add_subdirectory(tests/metro-ascii-test)
     add_subdirectory(tests/metro-blobtrack-test)
     add_subdirectory(tests/chromab-test)
+    add_subdirectory(tests/glow-test)
 endif()
 
 # --- Packaging ---

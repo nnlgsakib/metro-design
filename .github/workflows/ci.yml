@@ -101,6 +101,29 @@ jobs:
           name: metropolis-libs-${{ matrix.os }}-${{ github.sha }}
           path: metropolis/build/**/*.a
 
+  build-cuda:
+    name: Build with CUDA
+    runs-on: ubuntu-22.04
+    container:
+      image: nvidia/cuda:12.2.0-devel-ubuntu22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq cmake libx11-dev libgl1-mesa-dev
+
+      - name: Configure with CUDA
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DMETRO_USE_CUDA=ON
+
+      - name: Build GPU lib
+        run: cmake --build build --target ofx-gpu --parallel
+
+      - name: Build plugins with CUDA
+        run: cmake --build build --parallel
+
   test-python:
     name: Test Python packages
     runs-on: ubuntu-22.04

@@ -25,6 +25,13 @@ Testing/
 *.log
 compile_commands.json
 .cache/
+
+# CUDA build artifacts
+*.fatbin
+*.cubin
+*.ptx
+*.cudafe*
+*.cuda.cache
 node_modules/
 .next/
 metropolis/frontend/.next/
