@@ -1,0 +1,55 @@
+name: Branch Lifecycle
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  push:
+    branches:
+      - 'feature/**'
+      - 'fix/**'
+      - 'refactor/**'
+      - 'docs/**'
+      - 'chore/**'
+      - 'ci/**'
+      - 'test/**'
+      - 'release/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to run'
+        required: true
+        default: 'report'
+        type: choice
+        options:
+          - report
+          - check-naming
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  branch-health:
+    name: Branch Health Report
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run branch report
+        run: |
+          chmod +x scripts/branch-lifecycle.sh
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            scripts/branch-lifecycle.sh "${{ inputs.action }}"
+          else
+            scripts/branch-lifecycle.sh report
+          fi
+
+      - name: Run naming convention check
+        run: |
+          scripts/branch-lifecycle.sh check-naming
+
+      - name: Run repo health dashboard
+        run: |
+          scripts/repo-health.sh
