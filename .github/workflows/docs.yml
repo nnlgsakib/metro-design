@@ -1,0 +1,106 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'plugins/**/*.cpp'
+      - 'plugins/**/*.h'
+      - 'libs/**/*.cpp'
+      - 'libs/**/*.h'
+      - 'metropolis/**/*.cpp'
+      - 'metropolis/**/*.h'
+      - 'Doxyfile'
+      - 'docs/book.toml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'Doxyfile'
+      - 'docs/book.toml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint docs
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install markdownlint
+        run: |
+          sudo npm install -g markdownlint-cli@0.41
+
+      - name: Run markdownlint on docs/
+        run: markdownlint 'docs/**/*.md' --ignore 'docs/api/'
+
+  build:
+    name: Build docs
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq doxygen graphviz
+          curl -sL "https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/mdbook.tar.gz
+          tar xzf /tmp/mdbook.tar.gz -C /tmp
+          sudo mv /tmp/mdbook /usr/local/bin/
+
+      - name: Generate Doxygen API reference
+        run: doxygen Doxyfile 2>&1 | tee /tmp/doxygen.log
+
+      - name: Build mdBook static site
+        run: mdbook build docs
+        working-directory: .
+
+      - name: Upload built docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-site-${{ github.sha }}
+          path: docs/book/
+
+  publish:
+    name: Publish docs to GitHub Pages
+    if: github.ref == 'refs/heads/main'
+    needs: [lint, build]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get install -y -qq doxygen graphviz
+          curl -sL "https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/mdbook.tar.gz
+          tar xzf /tmp/mdbook.tar.gz -C /tmp
+          sudo mv /tmp/mdbook /usr/local/bin/
+
+      - name: Generate Doxygen API reference
+        run: doxygen Doxyfile
+
+      - name: Build mdBook static site
+        run: mdbook build docs
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/book
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

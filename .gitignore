@@ -36,3 +36,7 @@ node_modules/
 .next/
 metropolis/frontend/.next/
 metropolis/frontend/out/
+
+# Docs build artifacts
+docs/api/
+docs/book/

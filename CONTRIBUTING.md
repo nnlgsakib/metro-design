@@ -25,6 +25,14 @@
 
 5. Open a pull request against `main` using the PR template.
 
+### Documentation requirements
+
+- Every new user-facing feature must include docs in the `docs/` folder
+- All public C++ API symbols must have Doxygen comments (`\brief`, `\param`, `\returns`)
+- Plugin docs go in `docs/plugins/<plugin-name>/README.md`
+- See `docs/guide/contributing.md` for full documentation style guide
+- CI runs `markdownlint` on all `.md` files and builds the docs site
+
 ### Push-after-completion policy
 
 1. Push commits immediately after each logical unit of work is verified (lint + tests pass).

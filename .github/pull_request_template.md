@@ -26,7 +26,8 @@
 - [ ] Code follows project style (clang-format, black)
 - [ ] No new lint warnings
 - [ ] Tests added for new functionality
-- [ ] Documentation updated if needed
+- [ ] Documentation updated in `docs/` for user-facing changes
+- [ ] Doxygen comments added to new public C++ API symbols
 - [ ] Commit messages follow conventional commits
 
 ## Risk assessment

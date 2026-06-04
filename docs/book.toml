@@ -1,0 +1,18 @@
+[book]
+authors = ["Metro Design"]
+language = "en"
+multilingual = false
+src = "."
+
+[output.html]
+default-theme = "ayu"
+preferred-dark-theme = "navy"
+search = true
+git-repository-url = "https://github.com/metro-design/metro-effects"
+edit-url-template = "https://github.com/metro-design/metro-effects/edit/main/docs/{path}"
+
+[output.html.fold]
+enable = true
+level = 1
+
+[preprocessor]

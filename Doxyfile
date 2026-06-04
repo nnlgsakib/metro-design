@@ -1,0 +1,37 @@
+# Metro Design Doxygen configuration
+# Generates HTML API reference from C++ source comments.
+# Output: docs/api/ (gitignored, CI-built and published)
+
+PROJECT_NAME           = "Metro Design"
+PROJECT_NUMBER         = 0.1.0
+PROJECT_BRIEF          = "DaVinci Resolve plugin suite API reference"
+OUTPUT_DIRECTORY       = docs/api
+CREATE_SUBDIRS         = NO
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH        = ./
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+MULTILINE_CPP_IS_BRIEF = YES
+BUILTIN_STL_SUPPORT    = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+CASE_SENSE_NAMES       = YES
+INPUT                  = ./
+RECURSIVE              = YES
+FILE_PATTERNS          = *.cpp *.h *.c *.hpp *.cuh *.cu
+EXCLUDE_PATTERNS       = */build/* */third_party/* */.git/*
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = .
+HTML_EXTRA_STYLESHEET  =
+DISABLE_INDEX          = NO
+GENERATE_TREEVIEW      = YES
+SEARCHENGINE           = YES
+SERVER_BASED_SEARCH    = NO
+GENERATE_TAGFILE       = docs/api/metro.tags
