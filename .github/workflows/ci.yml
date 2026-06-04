@@ -135,6 +135,29 @@ jobs:
           echo "On a GPU machine: cd build && ctest --tests-regex cuda-verification"
           echo "or directly: build/bin/cuda-verification"
 
+  color-grading-smoke:
+    name: Color Grading Smoke Tests
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install colour-science numpy pytest
+
+      - name: Generate reference LUTs
+        run: |
+          python tests/color-grading-smoke/generate_reference_luts.py
+
+      - name: Run smoke tests
+        run: |
+          python -m pytest tests/color-grading-smoke/ -v --tb=short
+
   test-python:
     name: Test Python packages
     runs-on: ubuntu-22.04
