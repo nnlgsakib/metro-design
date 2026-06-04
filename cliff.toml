@@ -1,0 +1,52 @@
+# git-cliff configuration for Metro Design
+# See https://git-cliff.org/docs/configuration
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+"""
+body = """
+{% if version %}\
+## [{{ version }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+- {{ commit.message | upper_first }}{% if commit.breaking %} [breaking]{% endif %}
+{% endfor %}
+{% endfor %}\
+"""
+trim = true
+postprocess = """
+{% macro remote_url() -%}
+  https://github.com/metro-design/metro-effects
+{%- endmacro %}
+"""
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^fix", group = "Bug Fixes" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^refactor", group = "Refactor" },
+  { message = "^test", group = "Testing" },
+  { message = "^ci", group = "CI/CD" },
+  { message = "^chore", group = "Chores" },
+  { message = "^perf", group = "Performance" },
+  { message = "^style", group = "Style" },
+  { message = "^build", group = "Build System" },
+  { message = ".*", group = "Other", default_scope = "other" },
+]
+filter_commits = false
+topo_order = false
+sort_commits = "newest"
