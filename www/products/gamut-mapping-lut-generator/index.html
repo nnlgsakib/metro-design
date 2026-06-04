@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gamut-Mapping LUT Generator — Metro Design</title>
+<meta name="description" content="Convert HDR to SDR without losing a single shade. CIEDE2000-optimized LUTs for DaVinci Resolve, Premiere Pro, and more.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Gamut-Mapping LUT Generator",
+  "description": "Convert HDR to SDR without losing a single shade. CIEDE2000-optimized LUT generation for professional color grading.",
+  "brand": { "@type": "Brand", "name": "Metro Design" },
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Standard",
+      "price": "79",
+      "priceCurrency": "USD",
+      "priceValidUntil": "2027-12-31",
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    },
+    {
+      "@type": "Offer",
+      "name": "Pro",
+      "price": "129",
+      "priceCurrency": "USD",
+      "priceValidUntil": "2027-12-31",
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "187",
+    "bestRating": "5"
+  }
+}
+</script>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a28;
+  --text: #e8e8f0;
+  --text2: #9494a8;
+  --accent: #22d3ee;
+  --accent2: #0e7490;
+  --accent-glow: rgba(34,211,238,.15);
+  --radius: 12px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+section { padding: 100px 0; }
+
+/* gradient text */
+.gradient-text { background: linear-gradient(135deg,var(--accent),#0891b2,#06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* headings */
+h2 { font-size: clamp(2rem,4vw,3rem); font-weight: 800; margin-bottom: 16px; letter-spacing: -.02em; }
+.section-sub { color: var(--text2); font-size: 1.15rem; max-width: 640px; margin-bottom: 60px; }
+
+/* pills/tags */
+.pill { display: inline-block; padding: 6px 16px; border-radius: 100px; font-size: .85rem; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; margin-bottom: 20px; }
+.pill-cyan { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(34,211,238,.3); }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all .25s; border: none; }
+.btn-primary { background: linear-gradient(135deg,var(--accent),#0891b2); color: #0a0a0f; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); text-decoration: none; }
+.btn-secondary { background: transparent; color: var(--text); border: 1px solid rgba(232,232,240,.2); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.btn-lg { padding: 18px 40px; font-size: 1.1rem; }
+
+/* ===== HERO ===== */
+.hero { min-height: 100vh; display: flex; align-items: center; position: relative; overflow: hidden; padding: 120px 0 80px; }
+.hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at 30% 50%,var(--accent-glow) 0%,transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(6,182,212,.08) 0%,transparent 50%); pointer-events: none; }
+.hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
+.hero h1 { font-size: clamp(2.5rem,5vw,4rem); font-weight: 800; line-height: 1.1; letter-spacing: -.03em; margin-bottom: 20px; }
+.hero p { font-size: 1.2rem; color: var(--text2); margin-bottom: 36px; max-width: 520px; }
+.hero-cta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 40px; }
+.social-proof { display: flex; gap: 32px; flex-wrap: wrap; }
+.social-proof-item { display: flex; align-items: center; gap: 8px; }
+.social-proof-item .num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+.social-proof-item .label { font-size: .9rem; color: var(--text2); }
+.hero-visual { position: relative; }
+.hero-visual .vid-wrap { position: relative; padding-bottom: 56.25%; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(255,255,255,.06); background: #000; }
+.hero-visual .vid-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+/* ===== PROBLEM ===== */
+.problem { background: var(--bg2); }
+.problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+.problem-stat { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 40px; background: var(--bg3); border-radius: var(--radius); border: 1px solid rgba(255,255,255,.06); }
+.problem-stat .num { font-size: 4rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.problem-stat .pct { font-size: 1.5rem; color: var(--accent); }
+.problem-stat .desc { margin-top: 12px; color: var(--text2); font-size: .95rem; }
+
+/* ===== HOW IT WORKS ===== */
+.how-it-works { text-align: center; }
+.how-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; margin-top: 48px; }
+.how-step { padding: 40px 24px; background: var(--bg2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,.06); position: relative; }
+.how-step .step-num { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-glow); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; margin: 0 auto 20px; }
+.how-step h3 { font-size: 1.2rem; margin-bottom: 8px; }
+.how-step p { color: var(--text2); font-size: .95rem; }
+.lottie-wrap { max-width: 400px; margin: 48px auto 0; }
+
+/* ===== WHY DIFFERENT ===== */
+.why-different { background: var(--bg2); }
+.why-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; }
+.why-card { padding: 36px 28px; background: var(--bg); border-radius: var(--radius); border: 1px solid rgba(255,255,255,.06); transition: transform .25s; }
+.why-card:hover { transform: translateY(-4px); }
+.why-card .icon { width: 52px; height: 52px; border-radius: var(--radius); background: var(--accent-glow); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 1.5rem; }
+.why-card h3 { font-size: 1.15rem; margin-bottom: 10px; }
+.why-card p { color: var(--text2); font-size: .95rem; }
+
+/* -- comparison slider -- */
+.comparison-wrap { margin-top: 60px; max-width: 720px; margin-left: auto; margin-right: auto; }
+.comparison-wrap h3 { text-align: center; margin-bottom: 24px; }
+.comparison { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(255,255,255,.06); background: #000; cursor: ew-resize; user-select: none; }
+.comparison-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.comparison .after { clip-path: inset(0 0 0 50%); }
+.comparison .slider-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; background: #fff; transform: translateX(-50%); z-index: 10; pointer-events: none; }
+.comparison .slider-handle::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 3px solid var(--accent); }
+.comparison .slider-label { position: absolute; top: 16px; font-size: .8rem; font-weight: 600; padding: 6px 14px; border-radius: 6px; text-transform: uppercase; letter-spacing: .04em; z-index: 5; }
+.comparison .label-before { left: 16px; background: rgba(0,0,0,.7); color: var(--text); }
+.comparison .label-after { right: 16px; background: rgba(0,0,0,.7); color: var(--accent); }
+
+/* ===== PRICING ===== */
+.pricing { text-align: center; }
+.pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; max-width: 800px; margin: 0 auto; }
+.pricing-card { padding: 48px 32px; background: var(--bg2); border-radius: var(--radius); border: 1px solid rgba(255,255,255,.06); position: relative; transition: transform .25s; }
+.pricing-card:hover { transform: translateY(-4px); }
+.pricing-card.popular { border-color: var(--accent); background: linear-gradient(180deg,var(--accent-glow) 0%,var(--bg2) 100%); }
+.pricing-card .badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); padding: 6px 24px; border-radius: 100px; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.pricing-card.popular .badge { background: var(--accent); color: #0a0a0f; }
+.pricing-card h3 { font-size: 1.5rem; margin-bottom: 8px; }
+.pricing-card .price { font-size: 3.5rem; font-weight: 800; margin: 20px 0 8px; }
+.pricing-card .price span { font-size: 1.25rem; font-weight: 400; color: var(--text2); }
+.pricing-card .trial { color: var(--text2); font-size: .9rem; margin-bottom: 24px; }
+.pricing-card ul { list-style: none; text-align: left; margin: 24px 0; }
+.pricing-card ul li { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.04); display: flex; align-items: center; gap: 10px; }
+.pricing-card ul li::before { content: '✓'; color: var(--accent); font-weight: 700; }
+.pricing-card .btn { width: 100%; justify-content: center; }
+
+/* ===== TESTIMONIALS ===== */
+.testimonials { background: var(--bg2); text-align: center; }
+.testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; }
+.testimonial-card { padding: 32px 24px; background: var(--bg); border-radius: var(--radius); border: 1px solid rgba(255,255,255,.06); text-align: left; }
+.testimonial-card .stars { color: #facc15; font-size: 1rem; margin-bottom: 16px; }
+.testimonial-card blockquote { color: var(--text); font-size: .95rem; font-style: italic; line-height: 1.7; margin-bottom: 20px; }
+.testimonial-card .author { font-weight: 600; font-size: .9rem; }
+.testimonial-card .role { color: var(--text2); font-size: .85rem; }
+
+/* ===== FAQ ===== */
+.faq { max-width: 780px; margin: 0 auto; }
+.faq-item { border-bottom: 1px solid rgba(255,255,255,.06); }
+.faq-q { padding: 24px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 600; font-size: 1.05rem; }
+.faq-q:hover { color: var(--accent); }
+.faq-q .chevron { transition: transform .3s; font-size: .85rem; color: var(--text2); }
+.faq-item.open .faq-q .chevron { transform: rotate(180deg); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .35s ease; color: var(--text2); line-height: 1.7; }
+.faq-item.open .faq-a { max-height: 300px; padding-bottom: 24px; }
+
+/* ===== FINAL CTA ===== */
+.final-cta { text-align: center; background: linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%); }
+.final-cta h2 { margin-bottom: 16px; }
+.final-cta p { color: var(--text2); font-size: 1.15rem; max-width: 520px; margin: 0 auto 36px; }
+
+/* ===== FOOTER ===== */
+footer { padding: 48px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.footer-grid { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px; }
+.footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+.footer-links a { color: var(--text2); font-size: .9rem; }
+.footer-links a:hover { color: var(--accent); }
+.footer-copy { color: var(--text2); font-size: .85rem; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero h1 { font-size: 2.5rem; }
+  .problem-grid { grid-template-columns: 1fr; }
+  .how-steps,.why-grid,.testimonials-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+  .pricing-card.popular { order: -1; }
+  section { padding: 64px 0; }
+  .footer-grid { flex-direction: column; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <span class="pill pill-cyan">Now Available</span>
+        <h1>Your HDR grades,<br>faithfully <span class="gradient-text">mapped to SDR</span></h1>
+        <p>Gamut-Mapping LUT Generator converts Rec.2020 to Rec.709 with CIEDE2000-optimized precision. No hue shifts. No clipped colors. Every shade preserved.</p>
+        <div class="hero-cta">
+          <a href="https://getmetro.co/signup?utm_source=product-page&utm_medium=website&plan=pro" class="btn btn-primary btn-lg">Start Free Trial</a>
+          <a href="#pricing" class="btn btn-secondary btn-lg">See Pricing</a>
+        </div>
+        <div class="social-proof">
+          <div class="social-proof-item">
+            <span class="num">1.8</span>
+            <span class="label">Avg CIEDE2000 ΔE</span>
+          </div>
+          <div class="social-proof-item">
+            <span class="num">4.9</span>
+            <span class="label">/ 5 Rated</span>
+          </div>
+          <div class="social-proof-item">
+            <span class="num">187+</span>
+            <span class="label">Colorists</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="vid-wrap">
+          <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0&showinfo=0&autoplay=0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" title="Gamut-Mapping LUT Generator trailer"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== THE PROBLEM ===== -->
+<section class="problem" id="problem">
+  <div class="container">
+    <div class="problem-grid">
+      <div>
+        <span class="pill pill-cyan">The Challenge</span>
+        <h2>Why HDR looks flat in SDR</h2>
+        <p class="section-sub" style="margin-bottom:24px">Rec.2020 covers <strong>~75%</strong> of the visible spectrum — nearly twice the gamut of Rec.709. Standard LUTs crush saturated colors, clip highlights, and introduce banding. The result: deliverables that don't match your grade.</p>
+        <p style="color:var(--text2)">Our CIEDE2000-aware engine preserves perceptual color accuracy across the entire gamut compression, so your creative intent survives the transform.</p>
+      </div>
+      <div class="problem-stat">
+        <div><span class="num">35</span><span class="pct">%</span></div>
+        <div class="desc">of visible color is lost when compressing from Rec.2020 to Rec.709 using standard LUTs<sup>*</sup></div>
+        <div style="margin-top:16px;font-size:.8rem;color:var(--text2)">* Based on independent CIEDE2000 delta-E analysis across 12,000 test patches</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how-it-works" id="how-it-works">
+  <div class="container">
+    <span class="pill pill-cyan">Three Clicks</span>
+    <h2>How It Works</h2>
+    <p class="section-sub" style="margin:0 auto 0;text-align:center">Generate production-ready LUTs in under 30 seconds.</p>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="step-num">1</div>
+        <h3>Import Your Session</h3>
+        <p>Load your timeline, still, or CDL. We auto-detect the source color space from your metadata.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-num">2</div>
+        <h3>Choose Your Output</h3>
+        <p>Select target color space, rendering intent, and optional trim parameters. Preview in real-time.</p>
+      </div>
+      <div class="how-step">
+        <div class="step-num">3</div>
+        <h3>Export the LUT</h3>
+        <p>Download a production-ready .cube file, calibrated and ready for your deliverable pipeline.</p>
+      </div>
+    </div>
+    <div class="lottie-wrap">
+      <lottie-player src="https://assets-v2.lottiefiles.com/a/3d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f80/example.json" background="transparent" speed="1" loop autoplay></lottie-player>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WHY DIFFERENT ===== -->
+<section class="why-different" id="why-different">
+  <div class="container">
+    <span class="pill pill-cyan">Why Metro</span>
+    <h2>Built Different</h2>
+    <p class="section-sub">Three innovations that set our LUT generator apart from every other tool.</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="icon">🎯</div>
+        <h3>CIEDE2000 Engine</h3>
+        <p>Perceptual color-difference minimization ensures the mapped result is indistinguishable from the source under standard viewing conditions.</p>
+      </div>
+      <div class="why-card">
+        <div class="icon">🎨</div>
+        <h3>Hue-Preserving Compression</h3>
+        <p>Our adaptive gamut mapping compresses chroma along hue lines — no hue shifts, no desaturated primaries, no artifacts.</p>
+      </div>
+      <div class="why-card">
+        <div class="icon">⚡</div>
+        <h3>GPU-Accelerated</h3>
+        <p>Leverages GPU compute to generate 33×33×33 LUTs in seconds. Batch-process hundreds of stills without waiting.</p>
+      </div>
+    </div>
+
+    <!-- comparison slider -->
+    <div class="comparison-wrap">
+      <h3>See the Difference</h3>
+      <p style="text-align:center;color:var(--text2);margin-bottom:24px">Drag the slider to compare standard LUT vs. CIEDE2000-optimized mapping</p>
+      <div class="comparison" id="comparison">
+        <div class="comparison-label label-before">Standard LUT</div>
+        <div class="comparison-label label-after">CIEDE2000</div>
+        <canvas id="beforeCanvas" class="comparison-canvas"></canvas>
+        <canvas id="afterCanvas" class="comparison-canvas after"></canvas>
+        <div class="slider-handle" id="sliderHandle"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <span class="pill pill-cyan">Pricing</span>
+    <h2>Simple, Transparent</h2>
+    <p class="section-sub" style="margin:0 auto 48px;text-align:center">One-time purchase. Free updates for 1 year. 14-day free trial — no credit card required.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <h3>Standard</h3>
+        <div class="price">$79 <span>USD</span></div>
+        <div class="trial">14-day free trial</div>
+        <ul>
+          <li>Basic gamut mapping engine</li>
+          <li>Rec.2020 → Rec.709</li>
+          <li>33×33×33 LUT export</li>
+          <li>.cube format</li>
+          <li>DaVinci Resolve & Premiere Pro</li>
+          <li>Email support</li>
+        </ul>
+        <a href="https://getmetro.co/signup?utm_source=product-page&utm_medium=website&plan=standard" class="btn btn-secondary">Start Free Trial</a>
+      </div>
+      <div class="pricing-card popular">
+        <span class="badge">Most Popular</span>
+        <h3>Pro</h3>
+        <div class="price">$129 <span>USD</span></div>
+        <div class="trial">14-day free trial</div>
+        <ul>
+          <li>Advanced gamut mapping engine</li>
+          <li>All color spaces (ACEScct, DCI-P3, S-Log, C-Log, Log C, more)</li>
+          <li>65×65×65 LUT export</li>
+          <li>.cube, .3dl, .amp formats</li>
+          <li>Batch processing & CLI API</li>
+          <li>All NLEs + Baselight</li>
+          <li>Priority email & chat support</li>
+        </ul>
+        <a href="https://getmetro.co/signup?utm_source=product-page&utm_medium=website&plan=pro" class="btn btn-primary">Start Free Trial</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <span class="pill pill-cyan">Testimonials</span>
+    <h2>Trusted by Colorists</h2>
+    <p class="section-sub" style="margin:0 auto 48px;text-align:center">From indie films to broadcast pipelines.</p>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Cut my LUT generation time by 90%. The CIEDE2000 accuracy is unmatched — my SDR deliverables finally match what I see on the HDR reference monitor."</blockquote>
+        <div class="author">Alex R.</div>
+        <div class="role">Senior Colorist, PostWorks</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <blockquote>"We standardised our entire broadcast pipeline around this tool. Gamut mapping that was taking our team hours now runs in seconds. Game changer for HDR-to-SDR delivery."</blockquote>
+        <div class="author">David T.</div>
+        <div class="role">Post-Production Supervisor, Frame48</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Finally, a tool that respects the colour science. No more hue-shifted skies or crushed reds. My theatrical and broadcast deliverables are now perfectly consistent."</blockquote>
+        <div class="author">Maria K.</div>
+        <div class="role">DIT & Colourist, Independent</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="faq" id="faq">
+  <div class="container" style="max-width:780px">
+    <span class="pill pill-cyan">FAQ</span>
+    <h2>Frequently Asked Questions</h2>
+    <p class="section-sub" style="margin:0 auto 48px;text-align:center">Everything you need to know about the Gamut-Mapping LUT Generator.</p>
+    <div class="faq-item open">
+      <div class="faq-q" onclick="toggleFaq(this)">What versions of DaVinci Resolve are supported? <span class="chevron">▼</span></div>
+      <div class="faq-a">DaVinci Resolve 17 and above (Studio required for external LUT support). The generated .cube files are compatible with both the Color Page and the OFX LUT node.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Does it work with other NLEs? <span class="chevron">▼</span></div>
+      <div class="faq-a">Yes. Exports standard .cube format compatible with Adobe Premiere Pro, Final Cut Pro, Baselight, Nuke, Scratch, and any application that supports 3D LUTs.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What's the difference between Standard and Pro? <span class="chevron">▼</span></div>
+      <div class="faq-a">Pro adds support for all color spaces (ACEScct, DCI-P3, Sony S-Log, Canon C-Log, ARRI Log C, Panasonic V-Log), 65×65×65 LUT resolution, batch processing, CLI API access, and priority support.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Is it a one-time purchase or subscription? <span class="chevron">▼</span></div>
+      <div class="faq-a">One-time purchase. Your license includes 1 year of free updates. After the first year, you can optionally renew for continued updates at a reduced rate. The software continues to work without renewal.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What source color spaces are supported? <span class="chevron">▼</span></div>
+      <div class="faq-a">Standard tier supports Rec.2020, Rec.709, and DCI-P3. Pro adds ACEScct, Sony S-Log3/S-Log2, Canon C-Log/C-Log2/C-Log3, ARRI Log C (wide gamut), Panasonic V-Log/V-Gamut, and RED IPP2. We're constantly adding new spaces based on user requests.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="final-cta">
+  <div class="container">
+    <h2>Ready to transform your <span class="gradient-text">HDR-to-SDR pipeline</span>?</h2>
+    <p>Join 187+ colorists who trust Metro Design for color-critical deliverables. Start your free trial today.</p>
+    <a href="https://getmetro.co/signup?utm_source=product-page&utm_medium=website&plan=pro" class="btn btn-primary btn-lg">Start Free Trial — No Credit Card</a>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-copy">&copy; 2026 Metro Design. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="https://docs.getmetro.co/gamut-mapping-lut-generator?utm_source=product-page&utm_medium=website">Documentation</a>
+        <a href="https://getmetro.co/tutorials?utm_source=product-page&utm_medium=website">Tutorial Series</a>
+        <a href="https://getmetro.co/support?utm_source=product-page&utm_medium=website">Support</a>
+        <a href="https://getmetro.co/privacy?utm_source=product-page&utm_medium=website">Privacy Policy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Lottie -->
+<script src="https://unpkg.com/@lottiefiles/lottie-player@2/dist/lottie-player.js" defer></script>
+
+<!-- comparison slider + FAQ toggle -->
+<script>
+(function() {
+  // ---- CIEDE2000 comparison slider ----
+  var comp = document.getElementById('comparison');
+  var beforeCanvas = document.getElementById('beforeCanvas');
+  var afterCanvas = document.getElementById('afterCanvas');
+  var handle = document.getElementById('sliderHandle');
+  var pos = 50;
+  var dragging = false;
+
+  function drawGamut(canvas, degraded) {
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width, h = canvas.height;
+    var cx = w / 2, cy = h / 2;
+    var r = Math.min(w, h) * 0.38;
+
+    // background
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, w, h);
+
+    for (var i = 0; i < 360; i += 2) {
+      var rad = i * Math.PI / 180;
+      var x = cx + Math.cos(rad) * r;
+      var y = cy + Math.sin(rad) * r;
+
+      var hue = i / 360;
+      var sat = 0.9;
+      var lum = 0.55;
+
+      if (degraded) {
+        // banded/posterized
+        var band = Math.round(i / 18) * 18;
+        rad = band * Math.PI / 180;
+        x = cx + Math.cos(rad) * r;
+        y = cy + Math.sin(rad) * r;
+        sat = 0.6 + Math.round(Math.sin(rad) * 3) / 10;
+        lum = 0.4 + Math.round(Math.cos(rad) * 3) / 10;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.closePath();
+
+      var hsl = 'hsl(' + (i) + ', ' + (sat * 100) + '%, ' + (lum * 100) + '%)';
+      ctx.fillStyle = hsl;
+      ctx.fill();
+    }
+
+    // outer ring
+    for (var i = 0; i < 360; i += 1) {
+      var rad = i * Math.PI / 180;
+      var x = cx + Math.cos(rad) * r;
+      var y = cy + Math.sin(rad) * r;
+      ctx.fillStyle = 'hsl(' + i + ', 100%, 65%)';
+      ctx.fillRect(x - 1, y - 1, 3, 3);
+    }
+
+    // inner patches (color checker)
+    var patches = [
+      [0, 'red'], [30, 'orange'], [60, 'yellow'], [120, 'green'],
+      [200, 'cyan'], [240, 'blue'], [300, 'magenta'], [330, 'pink']
+    ];
+    var pr = r * 0.15;
+    patches.forEach(function(p, idx) {
+      var pa = idx / patches.length * Math.PI * 2 - Math.PI / 2;
+      var px = cx + Math.cos(pa) * r * 0.55;
+      var py = cy + Math.sin(pa) * r * 0.55;
+
+      if (degraded) {
+        ctx.fillStyle = 'hsl(' + p[0] + ', 40%, ' + (30 + (idx % 3) * 10) + '%)';
+      } else {
+        ctx.fillStyle = 'hsl(' + p[0] + ', 90%, 55%)';
+      }
+      ctx.beginPath();
+      ctx.arc(px, py, pr * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  function resizeCanvases() {
+    var rect = comp.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var w = rect.width * dpr;
+    var h = rect.height * dpr;
+    beforeCanvas.width = afterCanvas.width = w;
+    beforeCanvas.height = afterCanvas.height = h;
+    beforeCanvas.style.width = afterCanvas.style.width = '100%';
+    beforeCanvas.style.height = afterCanvas.style.height = '100%';
+    drawGamut(beforeCanvas, true);
+    drawGamut(afterCanvas, false);
+    updateSlider();
+  }
+
+  function updateSlider() {
+    var pct = pos + '%';
+    afterCanvas.style.clipPath = 'inset(0 0 0 ' + pct + ')';
+    handle.style.left = pct;
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    var rect = comp.getBoundingClientRect();
+    var x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    pos = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    updateSlider();
+  }
+
+  comp.addEventListener('mousedown', function(e) { dragging = true; onMove(e); });
+  comp.addEventListener('touchstart', function(e) { dragging = true; onMove(e); }, {passive: true});
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', function() { dragging = false; });
+  document.addEventListener('touchend', function() { dragging = false; });
+
+  // ---- FAQ toggle ----
+  window.toggleFaq = function(el) {
+    var item = el.parentNode;
+    item.classList.toggle('open');
+  };
+
+  // ---- resize ----
+  window.addEventListener('resize', resizeCanvases);
+  resizeCanvases();
+
+  // retry on Lottie player load
+  setTimeout(resizeCanvases, 500);
+})();
+</script>
+</body>
+</html>
