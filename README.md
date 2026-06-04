@@ -45,7 +45,17 @@ cpack --config build/CPackConfig.cmake
 ## CI/CD
 
 GitHub Actions workflows in `.github/workflows/`:
-- `ci.yml` — Lint, build, test, and package on push/PR to `main`
+- `ci.yml` — Lint, build, test, package, and generate changelog on push/PR to `main`
+
+## Changelog
+
+This project uses [git-cliff](https://git-cliff.org) to generate `CHANGELOG.md` from [Conventional Commits](https://www.conventionalcommits.org/).
+
+- On every push to `main`, CI regenerates `CHANGELOG.md` and commits it with `[skip ci]`.
+- The changelog is grouped by type: Features, Bug Fixes, Documentation, CI/CD, Refactor, Testing, Chores, etc.
+- Breaking changes are flagged with `[breaking]` in the changelog.
+- To generate locally: `git-cliff -o CHANGELOG.md` (requires git-cliff v2.6+).
+- Configuration: [`cliff.toml`](cliff.toml) at the repo root.
 
 ## Code style
 
