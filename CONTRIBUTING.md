@@ -10,14 +10,20 @@
 
 2. Make changes following project conventions (see below).
 
-3. Run lint and tests locally:
+3. Install pre-commit hooks (run once per clone):
+   ```bash
+   pip install pre-commit && pre-commit install
+   ```
+   Hooks run automatically on `git commit`. See `.pre-commit-config.yaml`.
+
+4. Run lint and tests locally:
    ```bash
    cmake -B build -DCMAKE_BUILD_TYPE=Debug -DMETRO_BUILD_TESTS=ON
    cmake --build build --parallel
    cd build && ctest --output-on-failure
    ```
 
-4. Open a pull request against `main` using the PR template.
+5. Open a pull request against `main` using the PR template.
 
 ### Push-after-completion policy
 
