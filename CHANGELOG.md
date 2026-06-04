@@ -7,25 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Bug Fixes
-
-- Remove test artifacts from tracking, update .gitignore
-
-
 ### CI/CD
 
-- Add repo health dashboard and branch lifecycle automation
+- Add automated GitHub Release creation on version tags
 
 
-### Chores
+## [0.1.0] - 2026-06-05
 
-- Add VR Teams plugin and improve cross-platform build config
+### Features
 
-- Enhance .gitignore with additional generated file patterns
+- Initial monorepo setup with CI/CD, tooling, and project scaffolding
 
-- Add copyright headers to all source files
+- Add CUDA infrastructure and GPU pipeline for MetroEffects
 
-- Update LICENSE to proprietary, add DEPLOYMENT.md, add new screenshots
+- Add metro_add_gpu_plugin() CMake function for CUDA plugin support
+
+- Add 6 new plugins, CUDA pipeline, and 7 test suites for MET-59
+
+- Add pre-commit hook configuration for Metro Design repos
 
 
 ### Documentation
@@ -33,15 +32,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add push-after-completion policy to CONTRIBUTING.md
 
 
-### Features
+### Chores
 
-- Add pre-commit hook configuration for Metro Design repos
+- Update LICENSE to proprietary, add DEPLOYMENT.md, add new screenshots
 
-- Add 6 new plugins, CUDA pipeline, and 7 test suites for MET-59
+- Add copyright headers to all source files
 
-- Add metro_add_gpu_plugin() CMake function for CUDA plugin support
+- Enhance .gitignore with additional generated file patterns
 
-- Add CUDA infrastructure and GPU pipeline for MetroEffects
+- Add VR Teams plugin and improve cross-platform build config
 
-- Initial monorepo setup with CI/CD, tooling, and project scaffolding
+
+### CI/CD
+
+- Add repo health dashboard and branch lifecycle automation
+
+
+### Bug Fixes
+
+- Remove test artifacts from tracking, update .gitignore
 
