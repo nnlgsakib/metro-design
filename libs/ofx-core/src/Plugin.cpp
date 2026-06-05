@@ -6,6 +6,26 @@
 
 namespace metro::ofx {
 
+Plugin::~Plugin() = default;
+
+OfxStatus Plugin::setHost(OfxHost *host)
+{
+    host_ = std::make_unique<Host>(host);
+    return host_ ? kOfxStatOK : kOfxStatErrMemory;
+}
+
+OfxStatus Plugin::describe(OfxImageEffectHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::describeInContext(OfxImageEffectHandle, int) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::createInstance(OfxImageEffectHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::destroyInstance(OfxImageEffectHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::render(OfxImageEffectHandle, OfxPropertySetHandle, OfxPropertySetHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::isIdentity(OfxImageEffectHandle, OfxPropertySetHandle, OfxPropertySetHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::clipPreferences(OfxImageEffectHandle, OfxPropertySetHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::getRegionOfDefinition(OfxImageEffectHandle, OfxPropertySetHandle, OfxPropertySetHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::instanceChanged(OfxImageEffectHandle, OfxPropertySetHandle, OfxPropertySetHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::beginRender(OfxImageEffectHandle, OfxPropertySetHandle) { return kOfxStatReplyDefault; }
+OfxStatus Plugin::endRender(OfxImageEffectHandle, OfxPropertySetHandle) { return kOfxStatReplyDefault; }
+
 static const int kMaxPlugins = 32;
 static int s_pluginCount = 0;
 static Plugin *s_plugins[kMaxPlugins] = {};
@@ -22,11 +42,13 @@ static int pluginIndexForHandle(void *handle)
 
 extern "C" {
 
+__attribute__((visibility("default")))
 int OfxGetNumberOfPlugins(void)
 {
     return s_pluginCount;
 }
 
+__attribute__((visibility("default")))
 OfxPlugin *OfxGetPlugin(int index)
 {
     if (index < 0 || index >= s_pluginCount)

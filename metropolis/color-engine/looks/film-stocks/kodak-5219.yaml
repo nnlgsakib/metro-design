@@ -1,0 +1,102 @@
+# Kodak Vision3 500T 5219 — High-Speed Tungsten Negative
+# 500-speed tungsten-balanced (3200K) motion picture negative film.
+# The industry standard for low-light and night work. Extended red
+# sensitivity, robust underexposure latitude.
+
+metadata:
+  id: kodak-5219
+  name: Kodak Vision3 500T 5219
+  type: film_emulation
+  status: draft
+  author: Colorist
+  created: "2026-06-04"
+  version: 0.1
+
+film_info:
+  manufacturer: Kodak
+  stock: Vision3 500T 5219
+  type: Camera negative (tungsten-balanced)
+  base: 3200K
+  iso: 500
+  key_characteristics:
+    - Extended red sensitivity (good skin tones under tungsten)
+    - Broad underexposure latitude (~3.5 stops)
+    - Moderate grain visible in midtones at 500T
+    - Warm, natural skin tone reproduction
+    - Shoulder roll-off begins around 2.5 stops above middle gray
+
+color_characteristics:
+  white_point: 3200K (native); 5500K with 85 filter
+  gamut: Vision3 negative (~slightly wider than Rec.2020 in
+    saturated primaries)
+  transfer_function: Camera negative log density
+  contrast: 0.45 (scene-linear)
+  saturation: 0.65
+
+# DaVinci Resolve ACEScct Recipe
+resolve_aces_recipe:
+  color_management: ACEScct
+  input_transform: "Input — ARRI Alexa"  # or "Input — RED"
+  reference_gamut: AP0
+  working_space: ACEScct AP1
+  output_transform: "Output — P3-DCI"
+
+  nodes:
+    - id: CST_to_5219
+      label: CST — LogC to 5219 Negative
+      type: ColorSpaceTransform
+      params:
+        input_color_space: LogC (EI800) AWG
+        input_gamma: LogC
+        output_color_space: P3-DCI
+        output_gamma: Cineon
+
+    - id: tungsten_white
+      label: Tungsten White Point
+      type: ColorWheels
+      params:
+        lift: [0.00, 0.00, 0.01]
+        gamma: [0.01, 0.00, 0.00]
+        gain: [0.02, -0.01, -0.03]
+
+    - id: contrast
+      label: Negative Contrast
+      type: CustomCurves
+      params:
+        master_contrast: 0.50
+        shadows: 0.20
+        highlights: 0.80
+
+    - id: grain
+      label: 500T Grain
+      type: OFX:metropolis-filmgrain
+      params:
+        grain_size: 1.0
+        intensity: 0.25
+        shadows: 0.15
+        midtones: 0.35
+        highlights: 0.10
+
+  notes:
+    - >-
+      5219 under tungsten (3200K) gives the most natural skin tone
+      response. With 85 filter in daylight, expect a ~0.65 stop
+      speed loss.
+    - >-
+      In HDR: the shoulder roll-off from 5219 is gentle. Use a
+      soft knee starting at 300 nits for a faithful emulation.
+    - >-
+      When scanning, the negative has a characteristic orange mask
+      (~0.15 R, 0.25 G, 0.30 B density). Remove with a linear
+      printer-light correction before the above grade if starting
+      from raw scans.
+
+validation:
+  skin_tone_line: ~10 deg offset toward red-orange (natural tungsten)
+  preferred_uses:
+    - Night exteriors / interiors
+    - Tungsten-lit drama
+    - Period films (1990s-present)
+    - Horror (grain adds texture)
+  display_requirements:
+    - "Any calibrated display (Rec.709, P3-DCI, or HDR)"

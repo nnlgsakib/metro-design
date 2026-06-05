@@ -1,0 +1,123 @@
+# Teal/Orange Blockbuster Look
+# The dominant color grade in modern action and blockbuster cinema.
+# Skin tones are pushed warm (orange/gold) while shadows and
+# neutrals are shifted cool (teal). Creates high-complement
+# contrast between subject and background.
+
+metadata:
+  id: teal-orange
+  name: Teal/Orange Blockbuster Contrast
+  type: creative_grade
+  status: draft
+  author: Colorist
+  created: "2026-06-04"
+  version: 0.1
+
+look_attributes:
+  style: Blockbuster / High-Contrast Color
+  mood: Cinematic, heroic, polished
+  key_elements:
+    - Warm skin tones (orange hue, 20–30° on vectorscope)
+    - Cool shadows (teal hue, 180–200°)
+    - Saturated complementary contrast
+    - Crushed blacks or elevated shadows depending on era
+    - Skin tones always the warmest element in frame
+
+# DaVinci Resolve Recipe (ACEScct)
+resolve_recipe:
+  color_management: ACEScct
+  input_transform: "Input — ARRI Alexa"  # or as shot
+  working_space: ACEScct AP1
+  output_transform: "Output — Rec.709"  # or P3-DCI for cinema
+
+  nodes:
+    - id: wb_correction
+      label: White Balance
+      type: ColorWheels
+      params:
+        # Neutralize any cast before creative grading
+        temp: 0.0
+        tint: 0.0
+
+    - id: exposure_primaries
+      label: Exposure & Contrast
+      type: PrimariesBars
+      params:
+        lift: -0.03   # crush blacks slightly
+        gamma: 1.05   # lift midtones
+        gain: 0.95    # protect highlights
+        contrast: 1.15
+
+    - id: skin_protection
+      label: Skin Saturation
+      type: HueVsSat
+      params:
+        # Boost skin saturation without pushing into orange
+        hue_20_40: 1.15  # orange-red
+        hue_40_60: 1.10  # yellow-orange
+
+    - id: teal_shadows
+      label: Teal Shadows
+      type: ColorWheels
+      params:
+        shadows_hue: 195   # teal
+        shadows_sat: 0.12
+
+    - id: qualifier_skin
+      label: Isolate Skin
+      type: Qualifier (HSL)
+      params:
+        hue_range: [15, 45]
+        sat_range: [0.1, 0.8]
+        luminance: [0.2, 0.8]
+
+    - id: skin_warmth
+      label: Warm Skin
+      type: ColorWheels
+      params:
+        offset_hue: 25
+        offset_sat: 0.05
+
+    - id: teal_bg
+      label: BG to Teal
+      type: ColorWheels
+      params:
+        # Affects non-skin regions via inverted qualifier
+        gain_hue: 195
+        gain_sat: 0.08
+
+  notes:
+    - >-
+      This look depends on a clean key. If the qualifier bleeds,
+      use a Power Window (grad or oval) to limit the background
+      teal to the area of interest.
+    - >-
+      On darker skin tones (melanin-dominant): reduce the orange
+      push to around 20 deg or the skin will look unnatural. Use a
+      second qualifier node tuned to darker luminance ranges.
+    - >-
+      For HDR grading: reduce teal saturation in highlights
+      (above 300 nits) or it will become the dominant color
+      in bright sky/background regions.
+    - >-
+      The M31 SUV test: if the shot has a car interior or
+      product placement midtones, the neutral grey of the
+      dashboard must not take on a teal cast. Adjust the
+      shadow hue range or use a luminance qualifier.
+
+validation:
+  skin_tone_line: ~25 deg on vectorscope (orange-red)
+  waveform_target: Luma peaking at 70-85% for caucasian skin
+  gamut_warning: >-
+    Check blues in specular highlights - avoid pushing teal into clipped whites
+  banding_risk:
+    - "8-bit: teal gradients in shadow regions will band; use 10-bit minimum"
+    - "HDR: gentle roll-off on teal saturation above 300 nits"
+
+  preferred_uses:
+    - Action / blockbuster
+    - Superhero films
+    - Commercial / high-energy content
+  display_requirements:
+    - "Minimum: Rec.709 / 100 nits"
+    - "Preferred: P3-DCI / 48 nits or HDR ST 2084"

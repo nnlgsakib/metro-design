@@ -123,83 +123,96 @@ static float acescct_fwd(float v) {
 }
 
 // --- ARRI LogC v3 (EI 800) ---
-// Reference: ARRI LogC3 Algorithm
+// Reference: ARRI LogC3, SUP 3.x, Linear Scene Exposure Factor
+// y = c * log10(a * x + b) + d  for x > cut
+// y = e * x + f                  for x <= cut
 static float logc_inv(float v) {
+    const float cut = 0.010591f;
     const float a = 5.555556f;
     const float b = 0.052272f;
-    const float c = 0.012852f;
-    const float cut = 0.010591f;
-    const float logCut = c + a * log10f(cut + b);
-    if (v >= logCut) return powf(10.0f, (v - c) / a) - b;
-    return (cut / logCut) * v;
+    const float c = 0.247190f;
+    const float d = 0.385537f;
+    const float e = 5.367655f;
+    const float f = 0.092809f;
+    const float cutEnc = e * cut + f;
+    if (v > cutEnc) return (powf(10.0f, (v - d) / c) - b) / a;
+    return (v - f) / e;
 }
 static float logc_fwd(float v) {
+    const float cut = 0.010591f;
     const float a = 5.555556f;
     const float b = 0.052272f;
-    const float c = 0.012852f;
-    const float cut = 0.010591f;
-    const float logCut = c + a * log10f(cut + b);
-    if (v >= cut) return c + a * log10f(v + b);
-    return (logCut / cut) * v;
+    const float c = 0.247190f;
+    const float d = 0.385537f;
+    const float e = 5.367655f;
+    const float f = 0.092809f;
+    if (v > cut) return c * log10f(a * v + b) + d;
+    return e * v + f;
 }
 
 // --- S-Log3 ---
-// Reference: Sony S-Log3 specification
+// Reference: Sony Technical Summary for S-Gamut3.Cine/S-Log3
+// 10-bit CV encoding normalized to 0-1
 static float slog3_inv(float v) {
-    const float a = 0.432699f;
-    const float b = 0.037584f;
-    const float c = 0.016119f;
-    const float cut = 0.011599f;
-    if (v >= cut) return powf(10.0f, (v - c) / a) - b;
-    return (v / cut) * (powf(10.0f, (cut - c) / a) - b);
+    const float cutEnc = 171.2102946929f / 1023.0f;
+    if (v >= cutEnc) {
+        return (powf(10.0f, (v * 1023.0f - 420.0f) / 261.5f)) * 0.19f - 0.01f;
+    } else {
+        return (v * 1023.0f - 95.0f) * 0.01125000f / 76.2102946929f;
+    }
 }
 static float slog3_fwd(float v) {
-    const float a = 0.432699f;
-    const float b = 0.037584f;
-    const float c = 0.016119f;
-    if (v >= 0.0f) return c + a * log10f(v + b);
-    return c + a * log10f(b);
+    const float cut = 0.01125000f;
+    if (v >= cut) {
+        return (420.0f + log10f((v + 0.01f) / 0.19f) * 261.5f) / 1023.0f;
+    } else {
+        return (v * 76.2102946929f / 0.01125000f + 95.0f) / 1023.0f;
+    }
 }
 
 // --- S-Log2 ---
-// Reference: Sony S-Log2 specification
+// Reference: Sony S-Log2 Technical Paper
+// Implemented as S-Log(x * 155/219) with legal-to-full output
 static float slog2_inv(float v) {
-    const float a = 0.255649f;
-    const float b = 0.003373f;
-    const float c = 0.030601f;
-    const float cut = 0.030967f;
-    if (v >= cut) return (powf(10.0f, (v - c) / a) - b) / 0.555556f;
-    return (v / cut) * 0.0001f;
+    const float kFullScale = 1023.0f / 876.0f;
+    const float kFullOff = 64.0f / 876.0f;
+    float y_ire = v * kFullScale - kFullOff;
+    float x_ire;
+    if (y_ire >= 0.030001222851889303f) {
+        x_ire = powf(10.0f, (y_ire - 0.646596f) / 0.432699f) - 0.037584f;
+    } else {
+        x_ire = (y_ire - 0.030001222851889303f) / 5.0f;
+    }
+    return x_ire * 0.9f * 219.0f / 155.0f;
 }
 static float slog2_fwd(float v) {
-    const float a = 0.255649f;
-    const float b = 0.003373f;
-    const float c = 0.030601f;
-    if (v >= 0.0f) return c + a * log10f(v * 0.555556f + b);
-    return c + a * log10f(b);
+    float ire = v * 155.0f / (219.0f * 0.9f);
+    float y_ire;
+    if (ire >= 0.0f) {
+        y_ire = 0.432699f * log10f(ire + 0.037584f) + 0.646596f;
+    } else {
+        y_ire = ire * 5.0f + 0.030001222851889303f;
+    }
+    return y_ire * 876.0f / 1023.0f + 64.0f / 1023.0f;
 }
 
 // --- V-Log ---
-// Reference: Panasonic V-Log / V-Gamut specification
+// Reference: Panasonic V-Log/V-Gamut specification
 static float vlog_inv(float v) {
-    const float a = 0.125f;
-    const float b = 0.0075f;
-    const float c = 0.5f;
-    const float d = 0.1f;
-    const float e = 0.0095f;
-    const float cut = 0.100962f;
-    if (v >= cut) return powf(10.0f, (v - d) / a) - b;
-    return (v - c) / (e * 16.0f);
+    const float cutEnc = 0.181f;
+    const float b = 0.00873f;
+    const float c = 0.241514f;
+    const float d = 0.598206f;
+    if (v < cutEnc) return (v - 0.125f) / 5.6f;
+    return powf(10.0f, (v - d) / c) - b;
 }
 static float vlog_fwd(float v) {
-    const float a = 0.125f;
-    const float b = 0.0075f;
-    const float c = 0.5f;
-    const float d = 0.1f;
-    const float e = 0.0095f;
-    const float cut = 0.100962f;
-    if (v >= cut) return d + a * log10f(v + b);
-    return c + e * 16.0f * v;
+    const float cut = 0.01f;
+    const float b = 0.00873f;
+    const float c = 0.241514f;
+    const float d = 0.598206f;
+    if (v < cut) return 5.6f * v + 0.125f;
+    return c * log10f(v + b) + d;
 }
 
 // ---------------------------------------------------------------------------
@@ -272,16 +285,16 @@ static const ColorMatrix kXYZ_to_2020 = {{
 
 // ACES AP1 (D60->D65 Bradford adaptation built in) -> XYZ D65
 static const ColorMatrix kMatAP1d65_to_XYZ = {{
-    { 0.661285f,  0.133693f,  0.155583f },
-    { 0.271003f,  0.672188f,  0.053446f },
-    { 0.002044f,  0.006852f,  1.018549f }
+    { 0.652276f,  0.128258f,  0.169942f },
+    { 0.267689f,  0.674335f,  0.057975f },
+    { -0.005382f, 0.001376f,  1.092831f }
 }};
 
 // XYZ D65 -> ACES AP1 (D65->D60 Bradford adaptation built in)
 static const ColorMatrix kXYZ_to_AP1d65 = {{
-    {  1.645470f, -0.326091f, -0.239299f },
-    { -0.662750f,  1.575103f,  0.044385f },
-    {  0.004015f, -0.011344f,  0.980924f }
+    {  1.660513f, -0.315336f, -0.241492f },
+    { -0.659944f,  1.608427f,  0.017298f },
+    {  0.009010f, -0.003579f,  0.913844f }
 }};
 
 // ARRI Wide Gamut -> XYZ D65

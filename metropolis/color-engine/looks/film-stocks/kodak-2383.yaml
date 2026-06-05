@@ -1,0 +1,102 @@
+# Kodak Vision3 2383 — D55 Print Film Emulation
+# Standard motion picture print film stock. Warm, contrasty, with
+# characteristic toe/ shoulder roll-off and a slightly warm D55
+# white point. The most common cinema print stock worldwide.
+
+metadata:
+  id: kodak-2383
+  name: Kodak Vision3 2383 (D55 Print Film)
+  type: film_emulation
+  status: draft
+  author: Colorist
+  created: "2026-06-04"
+  version: 0.1
+
+film_info:
+  manufacturer: Kodak
+  stock: Vision3 2383
+  type: Print (internegative)
+  base: D55 (5500K+2.5 CC magenta for print)
+  iso: N/A (print stock)
+  key_characteristics:
+    - Warm D55 white point
+    - Moderate-high contrast with soft shoulder roll-off
+    - Extended toe (dark areas crushed slightly)
+    - Fine grain
+    - Slightly desaturated blues and compressed reds vs scanner
+
+color_characteristics:
+  white_point: D55 (5500K)
+  gamut: Print (Kodak dye coupler—narrower than P3-DCI)
+  transfer_function: Print density (log-like, ~1.8–2.4 gamma on
+    projected print)
+  contrast: 0.55 (normalized scene-linear before print simulation)
+  saturation: 0.70 (relative to scene-linear)
+
+# DaVinci Resolve ACEScct Recipe
+resolve_aces_recipe:
+  color_management: ACEScct
+  input_transform: "Input — ARRI Alexa"  # adjust per source
+  reference_gamut: AP0
+  working_space: ACEScct AP1
+  output_transform: "Output — P3-DCI"
+
+  nodes:
+    - id: CST_to_print
+      label: CST — LogC to 2383 Print
+      type: ColorSpaceTransform
+      params:
+        input_color_space: LogC (EI800) AWG
+        input_gamma: LogC
+        output_color_space: P3-DCI
+        output_gamma: Cineon (print density approx)
+
+    - id: contrast_adjust
+      label: Print Contrast Curve
+      type: CustomCurves
+      params:
+        master_contrast: 0.55
+        pivot: 0.4
+        shadows: 0.15  # toe crush
+        highlights: 0.85  # shoulder roll-off
+
+    - id: warm_cast
+      label: D55 White Point Shift
+      type: ColorWheels
+      params:
+        lift: [0.00, 0.00, 0.00]
+        gamma: [0.02, 0.00, -0.01]
+        gain: [0.03, 0.00, -0.02]
+
+    - id: film_grain
+      label: Fine Grain Overlay
+      type: OFX:metropolis-filmgrain
+      params:
+        grain_size: 0.5
+        intensity: 0.15
+        shadows: 0.25
+        highlights: 0.05
+
+  notes:
+    - >-
+      Print stocks are designed for projection at 48±2 nits on a
+      DCI-compliant projector. On an SDR Rec.709 monitor, reduce
+      contrast by ~15% to compensate.
+    - >-
+      The D55 white point shift is subtle in the midtones but
+      visible in specular highlights. Do not over-shift or the
+      grade will look sepia.
+    - >-
+      For HDR (ST 2084, 200+ nits trim): reduce gain warmth by
+      50% and use a softer shoulder on the highlight region or
+      saturation will clip.
+
+validation:
+  skin_tone_line: ~15 deg offset toward red (warm D55 base)
+  preferred_uses:
+    - Narrative drama
+    - Period films (1980s-2000s)
+    - Any project wanting a projected film feel
+  display_requirements:
+    - "Minimum: Rec.709 / 100 nits calibrated"
+    - "Preferred: P3-DCI / 48 nits reference projector"

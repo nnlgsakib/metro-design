@@ -1,0 +1,96 @@
+metadata:
+  id: vintage-70s
+  name: 1970s Film Period Look
+  type: creative_grade
+  status: draft
+  author: Colorist
+  created: "2026-06-04"
+  version: 0.1
+
+look_attributes:
+  style: Period / Retro Film
+  mood: Nostalgic, gritty, documentary
+  key_elements:
+    - Desaturated overall palette (muted earth tones)
+    - Warm amber/yellow highlights
+    - Faded blacks (elevated lift)
+    - Soft halation around bright sources
+    - Visible grain structure
+    - Slight green/amber cast in shadows
+
+resolve_recipe:
+  color_management: ACEScct
+  input_transform: "Input — ARRI Alexa"
+  working_space: ACEScct AP1
+  output_transform: "Output — Rec.709"
+
+  nodes:
+    - id: desaturate
+      label: Global Desaturation
+      type: HueVsSat
+      params:
+        master_sat: 0.55
+
+    - id: fade_blacks
+      label: Faded Blacks
+      type: ColorWheels
+      params:
+        lift_hue: 40
+        lift_sat: 0.06
+
+    - id: warm_highlights
+      label: Warm Highlights
+      type: ColorWheels
+      params:
+        gain_hue: 45
+        gain_sat: 0.08
+
+    - id: shadow_cast
+      label: Shadow Green Tint
+      type: ColorWheels
+      params:
+        shadows_hue: 120
+        shadows_sat: 0.04
+
+    - id: film_grain
+      label: Heavy Grain
+      type: OFX:metropolis-filmgrain
+      params:
+        grain_size: 1.5
+        intensity: 0.30
+        shadows: 0.40
+        highlights: 0.10
+
+    - id: halation
+      label: Soft Glow / Halation
+      type: OFX:metropolis-glow
+      params:
+        radius: 8.0
+        intensity: 0.12
+        threshold: 0.85
+
+  notes:
+    - The faded blacks are the defining element of this look.
+      Adjust the lift saturation up or down depending on
+      how much period "age" is needed.
+    - For scenes with modern elements (cars, phones), increase
+      desaturation and grain to compensate.
+    - Avoid pushing gamma too warm or skin tones will look
+      jaundiced. Keep warmth primarily in highlights.
+    - For HDR, reduce halation intensity by half — it becomes
+      overwhelming above 300 nits.
+
+validation:
+  skin_tone_line: ~15 deg on vectorscope (amber-yellow)
+  waveform_target: Luma peaking at 60-75% with lifted floor at ~5%
+  gamut_warning: Monitor green channel in shadows — green/amber cast can push skin into sallow territory
+  banding_risk:
+    - "8-bit: faded blacks create visible banding in shadow gradients; use 10-bit minimum"
+    - "HDR: elevated blacks are more visible; reduce lift saturation"
+  preferred_uses:
+    - Period films (1960s-1970s)
+    - Flashback sequences
+    - Documentary / archival-style content
+  display_requirements:
+    - "Minimum: Rec.709 / 100 nits"
+    - "Preferred: P3-DCI / 48 nits"

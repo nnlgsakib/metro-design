@@ -39,6 +39,7 @@ if(METRO_BUILD_TESTS)
     add_subdirectory(tests/colorspace-test)
     add_subdirectory(tests/transitions-test)
     add_subdirectory(tests/vrteams-test)
+    add_subdirectory(tests/cuda-verification)
 endif()
 
 # --- Packaging ---

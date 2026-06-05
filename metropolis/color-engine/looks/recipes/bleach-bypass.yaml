@@ -1,0 +1,117 @@
+# Bleach Bypass / Silver Retention Look
+# Skips or reduces the bleach step in development, leaving silver
+# in the emulsion. Results in desaturated, high-contrast images
+# with crushed blacks, blown highlights, and increased apparent
+# sharpness. Used for gritty, intense, or period war-film looks.
+
+metadata:
+  id: bleach-bypass
+  name: Bleach Bypass / Silver Retention
+  type: creative_grade
+  status: draft
+  author: Colorist
+  created: "2026-06-04"
+  version: 0.1
+
+look_attributes:
+  style: High-contrast desaturated
+  mood: Gritty, intense, archival
+  key_elements:
+    - Strong desaturation across all hues (30–50% reduction)
+    - Crushed blacks with retained shadow detail
+    - Blown highlights (compressed)
+    - Increased midtone contrast
+    - Silver halide grain texture (coarser than standard film grain)
+    - Slight cool/cyan shift in neutrals
+
+# DaVinci Resolve Recipe (YRGB)
+resolve_recipe:
+  color_management: DaVinci YRGB Color Science
+  input_color_space: Log  # adjust per camera
+  working_gamma: Rec.709
+
+  nodes:
+    - id: contrast
+      label: High Constrast
+      type: CustomCurves
+      params:
+        contrast: 1.35
+        pivot: 0.45
+        shadows: 0.10
+        highlights: 0.90
+
+    - id: desaturate
+      label: Desaturate
+      type: HSV
+      params:
+        saturation: 0.50
+
+    - id: color_boost
+      label: Selective Saturation (blood/skin)
+      type: HueVsSat
+      params:
+        # Retain some saturation in reds for blood/mouths
+        hue_340_20: 1.30
+        # Retain skin warmth
+        hue_20_50: 1.20
+        # All other hues cut further
+        default: 0.70
+
+    - id: shadows_crush
+      label: Crush Blacks
+      type: ColorWheels
+      params:
+        lift: -0.06
+        gamma: 0.02
+
+    - id: highlights_clamp
+      label: Clamp Highlights
+      type: ColorWheels
+      params:
+        gain: -0.04  # pull highs down
+
+    - id: silver_grain
+      label: Silver Grain Texture
+      type: OFX:metropolis-filmgrain
+      params:
+        grain_size: 2.0
+        intensity: 0.35
+        monochrome: true  # silver grain is luminance-based
+        shadows: 0.40
+        highlights: 0.05
+
+  notes:
+    - >-
+      True bleach bypass on film increases contrast by 1-1.5 stops.
+      The digital emulation above approximates a 50% bypass.
+    - >-
+      For a full bypass look, increase contrast to 1.50 and
+      saturation to 0.35, but expect skin tones to look very
+      sickly - only use for specific stylistic intent.
+    - >-
+      On HDR: the crushed shadows will hide noise, but the
+      compressed highlights can reveal posterization. Use
+      dithering on 10-bit outputs.
+    - >-
+      Silver grain is monochrome and covers the whole frame,
+      including highlights. Adjust the highlight grain level
+      carefully or the brightest areas will look dirty.
+
+validation:
+  skin_tone_line: >-
+    Desaturated to ~30-40% saturation, hue maintained at ~25 deg if possible
+  waveform_target: >-
+    Luma range compressed to 5-80%; very few pixels at extremes
+  gamut_warning: Monitor for unnatural cyan skin undertones
+  banding_risk:
+    - "8-bit: VERY HIGH - gradients in highlights will show contouring"
+    - "10-bit: moderate - acceptable with noise/dither"
+
+  preferred_uses:
+    - War films (Saving Private Ryan, Fury)
+    - Gritty action / dystopian
+    - Flashbacks / memory sequences
+    - Music videos (alt/rock genre)
+  display_requirements:
+    - "Rec.709 / 100 nits minimum"
+    - "10-bit output strongly recommended"

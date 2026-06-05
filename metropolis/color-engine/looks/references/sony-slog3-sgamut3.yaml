@@ -1,0 +1,66 @@
+metadata:
+  id: ref-sony-slog3
+  name: Sony S-Log3 / S-Gamut3
+  type: color_space_reference
+  status: draft
+  author: Colorist
+  created: "2026-06-04"
+
+color_space:
+  manufacturer: Sony
+  camera_models:
+    - Sony Venice
+    - Sony VENICE 2
+    - Sony FX9
+    - Sony FX6
+    - Sony FX3
+    - Sony a7S III
+  log_curve: S-Log3
+  gamut: S-Gamut3 (or S-Gamut3.Cine for Venice)
+
+slog3_details:
+  - "Encoding: 16-bit raw or 10-bit X-OCN / XAVC"
+  - "Middle gray: 32% (0.32 in normalized code, ~420 code value in 10-bit)"
+  - "Reference EI: 800 (base for Venice)"
+  - "Curve: Optimized for 16-stop dynamic range"
+  - "Equivalent stops: 15+ (Venice 2: 17+)"
+
+gamut_details:
+  s_gamut3:
+    primary_chromaticities:
+      red: [0.7440, 0.3130]
+      green: [0.2140, 0.7460]
+      blue: [0.1310, 0.0460]
+    white_point: D65 (0.3127, 0.3290)
+    note: S-Gamut3 is Sony's largest gamut, similar to ACES AP0 in coverage
+
+  s_gamut3_cine:
+    note: S-Gamut3.Cine is a slightly reduced gamut (closer to DCI-P3) for
+      compatibility with existing post pipelines while retaining Sony color science
+    primary_chromaticities:
+      red: [0.7040, 0.3200]
+      green: [0.2480, 0.7060]
+      blue: [0.1220, 0.0570]
+    white_point: D65 (0.3127, 0.3290)
+
+resolve_presets:
+  acescct:
+    input_transform: Sony Venice (S-Gamut3/S-Log3) or Sony S-Gamut3.Cine/S-Log3
+    working: ACEScct AP1
+
+  davinci_yrgb:
+    input_color_space: Sony S-Gamut3
+    input_gamma: Sony S-Log3
+    timeline: "Rec.709 Gamma 2.4"
+
+lut_considerations:
+  - Sony provides manufacturer 3D LUTs for S-Log3/S-Gamut3 to Rec.709 and P3-DCI.
+    These are the reference transforms.
+  - 3D LUT resolution: minimum 33x33x3; 17x17x3 shows contouring in skin tones.
+  - For mixed Sony/ARRI workflows, use ACEScct with IDTs to normalize gamuts.
+  - S-Gamut3 to AP0 conversion is near-identity; S-Gamut3.Cine is closer to P3-D50.
+
+common_test_chart:
+  chart: "X-Rite ColorChecker Classic (24 patches)"
+  patch_middle_gray: "S-Log3 32%"
+  expected_skin: "~0.42 in S-Log3 for Caucasian face at 18% gray"

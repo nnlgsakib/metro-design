@@ -2,6 +2,7 @@ add_library(ofx-core
     src/Host.cpp
     src/Plugin.cpp
     src/param/ParamManager.cpp
+    src/FeatureFlag.cpp
 )
 
 target_include_directories(ofx-core

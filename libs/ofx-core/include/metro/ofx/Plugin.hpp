@@ -13,7 +13,7 @@ namespace metro::ofx {
 class Plugin {
 public:
     Plugin() = default;
-    virtual ~Plugin() = default;
+    virtual ~Plugin();
 
     Plugin(const Plugin &) = delete;
     Plugin &operator=(const Plugin &) = delete;

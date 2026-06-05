@@ -1,0 +1,75 @@
+# ARRI Wide Gamut / LogC Color Space Reference
+# Reference for ARRI's color pipeline used across Alexa line.
+
+metadata:
+  id: ref-arri-awg2logc
+  name: ARRI Wide Gamut (AWG) to LogC
+  type: color_space_reference
+  status: draft
+  author: Colorist
+  created: "2026-06-04"
+
+color_space:
+  manufacturer: ARRI
+  camera_models:
+    - Alexa Classic
+    - Alexa Mini
+    - Alexa Mini LF
+    - Alexa 35
+    - Alexa 65
+  log_curve: LogC (gen4 on Alexa 35, gen3 on others)
+  gamut: ARRI Wide Gamut
+
+logc_details:
+  gen3:
+    - "Encoding: 10-bit ARRIRAW or 12-bit ProRes"
+    - >-
+      Middle gray: 32% (0.32 in normalized code, ~444 code value in 10-bit)
+    - "Reference EI: 800 (base)"
+    - "Curve: Cineon-style with modified toe/shoulder"
+    - "Bit depth: 10-12 bit"
+    - "Equivalent stops: 14.5+ stops"
+
+  gen4:
+    - "Encoding: 16-bit ARRIRAW"
+    - "Middle gray: 0.32 in linear pre-log"
+    - "Curve: Refined shoulder roll-off for HDR compatibility"
+    - "Equivalent stops: 17+ stops"
+
+gamut_details:
+  primary_chromaticities:
+    red: [0.6840, 0.3130]
+    green: [0.2210, 0.7060]
+    blue: [0.0860, -0.0100]
+  white_point: D65 (0.3127, 0.3290)
+  note: >-
+    AWG green primary extends beyond spectral locus in some formulations
+    (negative blue y). This is normal for camera gamuts and handled by gamut
+    mapping in ACES.
+
+# DaVinci Resolve Color Management Presets
+resolve_presets:
+  acescct:
+    input_transform: ARRI Alexa (AWG/LogC)
+    working: ACEScct AP1
+
+  davinci_yrgb:
+    input_color_space: ARRI Wide Gamut
+    input_gamma: ARRI LogC
+    timeline: "Rec.709 Gamma 2.4"
+
+lut_considerations:
+  - >-
+    ARRI provides manufacturer LUTs for AWG/LogC to Rec.709 or P3-DCI. These are
+    the reference transform for color accuracy.
+  - >-
+    3D LUT resolution: minimum 33x33x3 for LogC to video; 17x17x3 too coarse
+    for critical skin tones.
+  - >-
+    For HDR, use ARRI's HDR reference LUTs or build a custom CST in Resolve for
+    ST 2084.
+
+common_test_chart:
+  chart: "DSC Labs ARRI ChromaMatch / X-Rite ColorChecker"
+  patch_middle_gray: "LogC 32%"
+  expected_skin: "~0.40 in LogC for Caucasian face at 18% gray"

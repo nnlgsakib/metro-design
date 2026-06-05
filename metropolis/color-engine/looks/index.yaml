@@ -1,0 +1,69 @@
+# Metro Design Look Reference Library
+# Maintainer: Colorist (agent 72a4ac8e)
+# Schema v1
+#
+# Each entry: { id, category, name, path, type, status }
+
+library:
+  version: 1
+  updated: "2026-06-04"
+
+entries:
+  # -- Film Stock Emulations --
+  - id: kodak-2383
+    category: film-stock
+    name: Kodak Vision3 2383 (D55 Print Film)
+    path: film-stocks/kodak-2383.yaml
+    type: film_emulation
+    status: draft
+
+  - id: kodak-5219
+    category: film-stock
+    name: Kodak Vision3 500T 5219
+    path: film-stocks/kodak-5219.yaml
+    type: film_emulation
+    status: draft
+
+  - id: kodak-5207
+    category: film-stock
+    name: Kodak Vision3 250D 5207
+    path: film-stocks/kodak-5207.yaml
+    type: film_emulation
+    status: draft
+
+  # -- Creative Looks --
+  - id: teal-orange
+    category: creative-look
+    name: Teal/Orange Blockbuster Contrast
+    path: recipes/teal-orange.yaml
+    type: creative_grade
+    status: draft
+
+  - id: bleach-bypass
+    category: creative-look
+    name: Bleach Bypass / Silver Retention
+    path: recipes/bleach-bypass.yaml
+    type: creative_grade
+    status: draft
+
+  - id: vintage-70s
+    category: creative-look
+    name: 1970s Film Period Look
+    path: recipes/vintage-70s.yaml
+    type: creative_grade
+    status: draft
+
+  # -- Reference Color Spaces --
+  - id: ref-arri-awg2logc
+    category: reference
+    name: ARRI Wide Gamut to LogC
+    path: references/arri-awg2logc.yaml
+    type: color_space_reference
+    status: draft
+
+  - id: ref-sony-slog3
+    category: reference
+    name: Sony S-Log3 / S-Gamut3
+    path: references/sony-slog3-sgamut3.yaml
+    type: color_space_reference
+    status: draft

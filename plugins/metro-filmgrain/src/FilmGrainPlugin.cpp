@@ -338,68 +338,98 @@ public:
         float fSharpness = static_cast<float>(sharpness);
         float fMix = static_cast<float>(mix);
 
-#if METRO_HAVE_CUDA
-        metro::gpu::DeviceInfo info = metro::gpu::probeDevices();
-        if (info.type == metro::gpu::DeviceType::CUDA && info.deviceCount > 0) {
-            // --- GPU path ---
-            metro::gpu::Buffer grainBuf;
-            if (!grainBuf.allocate(static_cast<size_t>(rw) * static_cast<size_t>(rh) * sizeof(float))) {
-                fprintf(stderr, "FilmGrain: failed to allocate GPU grain buffer, falling back to CPU\n");
-            } else {
-                const float *renderSrc = src + ry1 * srcStride + rx1 * 4;
-                float *renderDst = dst + ry1 * dstStride + rx1 * 4;
-
-                metro::gpu::Buffer srcBuf;
-                metro::gpu::Buffer dstBuf;
-                size_t bufBytes = static_cast<size_t>(rw) * static_cast<size_t>(rh) * 4 * sizeof(float);
-
-                bool ok = srcBuf.allocate(bufBytes) && dstBuf.allocate(bufBytes);
-                if (!ok) {
-                    fprintf(stderr, "FilmGrain: failed to allocate GPU image buffers, falling back to CPU\n");
-                } else {
-                    srcBuf.upload(renderSrc, bufBytes);
-
-                    if (!launchGenerateGrain(
-                            static_cast<float*>(grainBuf.devicePtr()),
-                            rw, rh, fSize, fSharpness,
-                            static_cast<unsigned int>(seed))) {
-                        fprintf(stderr, "FilmGrain: grain generation kernel failed, falling back to CPU\n");
-                    } else if (!launchApplyGrain(
-                            static_cast<const float*>(srcBuf.devicePtr()),
-                            static_cast<float*>(dstBuf.devicePtr()),
-                            static_cast<const float*>(grainBuf.devicePtr()),
-                            rw, rh, rw, rw, fAmount, fMix, grainType,
-                            static_cast<unsigned int>(seed))) {
-                        fprintf(stderr, "FilmGrain: apply grain kernel failed, falling back to CPU\n");
-                    } else {
-                        dstBuf.download(renderDst, bufBytes);
-
-                        effect->imageClipReleaseImage(srcData);
-                        effect->imageClipReleaseImage(dstData);
-                        return kOfxStatOK;
-                    }
-                }
-            }
-        }
-#endif
-
-        // --- CPU fallback path ---
-        // Generate grain texture for render window only
+        // Allocate staging buffer (tightly packed RGBA render window) and grain buffer
+        size_t tightStride = static_cast<size_t>(rw) * 4;
+        size_t tightBytes = tightStride * static_cast<size_t>(rh) * sizeof(float);
         size_t grainBytes = static_cast<size_t>(rw) * static_cast<size_t>(rh) * sizeof(float);
+        float* staging = static_cast<float*>(std::malloc(tightBytes));
         float* grain = static_cast<float*>(std::malloc(grainBytes));
-        if (!grain) {
+        if (!staging || !grain) {
+            std::free(staging); std::free(grain);
             effect->imageClipReleaseImage(srcData);
             effect->imageClipReleaseImage(dstData);
             return kOfxStatErrBadHandle;
         }
 
+        // Copy render window from OFX buffer into tight staging buffer
+        for (int y = 0; y < rh; ++y)
+            std::memcpy(staging + y * tightStride,
+                        src + (ry1 + y) * srcStride + rx1 * 4,
+                        tightStride * sizeof(float));
+
+#if METRO_HAVE_CUDA
+        // --- GPU path ---
+        {
+            metro::gpu::DeviceInfo info = metro::gpu::probeDevices();
+            bool gpuOk = (info.type == metro::gpu::DeviceType::CUDA && info.deviceCount > 0);
+
+            metro::gpu::Buffer stagingBuf;
+            metro::gpu::Buffer grainBuf;
+            if (gpuOk) {
+                gpuOk = stagingBuf.allocate(tightBytes) && grainBuf.allocate(grainBytes);
+            }
+
+            if (gpuOk) {
+                gpuOk = stagingBuf.upload(staging, tightBytes);
+            }
+
+            if (gpuOk) {
+                gpuOk = launchGenerateGrain(
+                    static_cast<float*>(grainBuf.devicePtr()),
+                    rw, rh, fSize, fSharpness,
+                    static_cast<unsigned int>(seed));
+            }
+
+            if (gpuOk) {
+                gpuOk = launchApplyGrain(
+                    static_cast<const float*>(stagingBuf.devicePtr()),
+                    static_cast<float*>(stagingBuf.devicePtr()),
+                    static_cast<const float*>(grainBuf.devicePtr()),
+                    rw, rh,
+                    static_cast<int>(tightStride),
+                    static_cast<int>(tightStride),
+                    fAmount, fMix, grainType,
+                    static_cast<unsigned int>(seed));
+            }
+
+            if (gpuOk) {
+                gpuOk = stagingBuf.download(staging, tightBytes);
+            }
+
+            if (gpuOk) {
+                // Copy staging back to OFX output buffer
+                for (int y = 0; y < rh; ++y)
+                    std::memcpy(dst + (ry1 + y) * dstStride + rx1 * 4,
+                                staging + y * tightStride,
+                                tightStride * sizeof(float));
+
+                std::free(staging); std::free(grain);
+                effect->imageClipReleaseImage(srcData);
+                effect->imageClipReleaseImage(dstData);
+                return kOfxStatOK;
+            }
+
+            if (info.deviceCount > 0) {
+                fprintf(stderr, "FilmGrain: GPU path failed, falling back to CPU\n");
+            }
+        }
+#endif
+
+        // --- CPU path ---
         generateGrainCPU(grain, rw, rh, fSize, fSharpness, static_cast<unsigned int>(seed));
 
-        const float *renderSrc = src + ry1 * srcStride + rx1 * 4;
-        float *renderDst = dst + ry1 * dstStride + rx1 * 4;
-        applyGrainCPU(renderSrc, renderDst, grain, rw, rh, rw, rw, fAmount, fMix, grainType, static_cast<unsigned int>(seed));
+        applyGrainCPU(staging, staging, grain, rw, rh,
+                      static_cast<int>(tightStride), static_cast<int>(tightStride),
+                      fAmount, fMix, grainType, static_cast<unsigned int>(seed));
+
+        // Copy staging back to OFX output buffer
+        for (int y = 0; y < rh; ++y)
+            std::memcpy(dst + (ry1 + y) * dstStride + rx1 * 4,
+                        staging + y * tightStride,
+                        tightStride * sizeof(float));
 
         std::free(grain);
+        std::free(staging);
 
         effect->imageClipReleaseImage(srcData);
         effect->imageClipReleaseImage(dstData);
